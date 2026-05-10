@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solana Meme Coin Control Center</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <section class="brand-block">
+          <div class="terminal-dot"></div>
+          <div>
+            <p class="eyebrow">Paper Trading Console</p>
+            <h1>Solana Meme Coin Control Center</h1>
+            <span class="mode-badge">SIMULATION ONLY - NO WALLET CONNECTED</span>
+          </div>
+        </section>
+        <section class="market-strip" aria-label="Portfolio status">
+          <div class="ticker-cell">
+            <span>Capital</span>
+            <strong id="capitalValue">--</strong>
+          </div>
+          <div class="ticker-cell">
+            <span>Equity</span>
+            <strong id="equityValue">--</strong>
+          </div>
+          <div class="ticker-cell">
+            <span>Open Risk</span>
+            <strong id="riskValue">--</strong>
+          </div>
+          <div class="ticker-cell">
+            <span>Cycle</span>
+            <strong id="cycleValue">--</strong>
+          </div>
+        </section>
+        <section class="action-row" aria-label="Dashboard actions">
+          <button id="refreshBtn" type="button">Refresh Data</button>
+          <button id="cycleBtn" type="button">Run Paper Cycle</button>
+          <button id="researchBtn" type="button">Run Research Cycle</button>
+          <button id="exportBtn" type="button">Export Journal</button>
+          <button id="resetBtn" class="danger" type="button">Reset Paper</button>
+        </section>
+      </header>
+
+      <section id="protocolWarning" class="protocol-warning" hidden>
+        <strong>Online APIs disabled in local file mode.</strong>
+        <span>Open the production console to run Research Agent, shared state, and DexScreener server analysis.</span>
+        <a href="https://meme-coin-control-center.vercel.app/">Open live console</a>
+      </section>
+
+      <section class="ticker-tape" aria-label="Live market tape">
+        <div id="tickerTapeInner" class="ticker-tape-inner">
+          <span>WAITING FOR DEXSCREENER FLOW</span>
+        </div>
+      </section>
+
+      <main class="dashboard-grid">
+        <div class="section-label trading-section">Trading Decision Layer</div>
+
+        <section class="panel chart-panel command-chart">
+          <div class="panel-header">
+            <h2>Token Market Chart</h2>
+            <span id="chartTitle">Best candidate history</span>
+          </div>
+          <div class="chart-kpi-row">
+            <div><span>Tracked Token</span><strong id="chartToken">--</strong></div>
+            <div><span>Last Price</span><strong id="chartPrice">--</strong></div>
+            <div><span>Flow Bias</span><strong id="chartFlowBias">--</strong></div>
+            <div><span>Liquidity</span><strong id="chartLiquidity">--</strong></div>
+          </div>
+          <canvas id="marketChart" width="920" height="250" aria-label="Selected token chart"></canvas>
+        </section>
+
+        <section class="panel hero-panel command-radar">
+          <div class="panel-header">
+            <h2>Signal Radar</h2>
+            <span id="lastUpdated">Waiting for first scan</span>
+          </div>
+          <div class="score-layout">
+            <div class="score-ring" aria-label="Best signal score">
+              <strong id="bestScore">--</strong>
+              <span>BEST SCORE</span>
+            </div>
+            <div class="signal-stack">
+              <div>
+                <span class="metric-label">Best Candidate</span>
+                <strong id="bestCandidate">--</strong>
+              </div>
+              <div>
+                <span class="metric-label">Entry Bias</span>
+                <strong id="entryBias">SCANNING</strong>
+              </div>
+              <div>
+                <span class="metric-label">Data Coverage</span>
+                <strong id="coverageValue">--</strong>
+              </div>
+              <div>
+                <span class="metric-label">Trading Edge</span>
+                <strong id="edgeQuality">COLLECTING</strong>
+              </div>
+              <div>
+                <span class="metric-label">Trade Gate</span>
+                <strong id="tradeGate">WAIT</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel account-equity-panel">
+          <div class="panel-header">
+            <h2>Account Equity Line</h2>
+            <span id="accountEquityRange">Full history</span>
+          </div>
+          <div class="equity-toolbar" aria-label="Equity chart controls">
+            <button id="equityZoomOutBtn" type="button">−</button>
+            <button id="equityZoomInBtn" type="button">+</button>
+            <button id="equityResetZoomBtn" type="button">ALL</button>
+          </div>
+          <div class="account-equity-kpis">
+            <div><span>Current Equity</span><strong id="accountEquityNow">--</strong></div>
+            <div><span>Return</span><strong id="accountEquityReturn">--</strong></div>
+            <div><span>High Water</span><strong id="accountEquityHigh">--</strong></div>
+            <div><span>Live Drawdown</span><strong id="accountEquityDd">--</strong></div>
+          </div>
+          <canvas id="accountEquityChart" width="1280" height="210" aria-label="Account equity line"></canvas>
+        </section>
+
+        <section class="panel btc-agent-panel">
+          <div class="panel-header">
+            <h2>BTCUSDT Order Flow Agent</h2>
+            <span id="btcAgentStatus">WAITING</span>
+          </div>
+          <div class="btc-command-grid">
+            <div><span>BTC Price</span><strong id="btcPrice">--</strong></div>
+            <div><span>Signal</span><strong id="btcSignal">WAIT</strong></div>
+            <div><span>Book Imbalance</span><strong id="btcImbalance">--</strong></div>
+            <div><span>CVD</span><strong id="btcCvd">--</strong></div>
+            <div><span>Spread</span><strong id="btcSpread">--</strong></div>
+            <div><span>BTC Equity</span><strong id="btcEquity">--</strong></div>
+            <div><span>Return</span><strong id="btcReturn">--</strong></div>
+            <div><span>Position</span><strong id="btcPosition">FLAT</strong></div>
+          </div>
+          <canvas id="btcEquityChart" width="760" height="150" aria-label="BTCUSDT paper equity"></canvas>
+          <div id="btcTapeList" class="btc-tape-list"></div>
+        </section>
+
+        <section class="panel risk-panel">
+          <div class="panel-header">
+            <h2>Risk Console</h2>
+            <span>Portfolio controls</span>
+          </div>
+          <div class="risk-console">
+            <div><span>Gross Exposure</span><strong id="grossExposureKpi">--</strong></div>
+            <div><span>Cash Buffer</span><strong id="cashBufferKpi">--</strong></div>
+            <div><span>Avg Open PnL</span><strong id="avgOpenPnlKpi">--</strong></div>
+            <div><span>System Grade</span><strong id="systemGradeKpi">--</strong></div>
+          </div>
+        </section>
+
+        <section class="panel profitability-panel">
+          <div class="panel-header">
+            <h2>Profitability Control</h2>
+            <span id="profitabilityMode">EV gated</span>
+          </div>
+          <div class="profit-grid">
+            <div><span>Best EV</span><strong id="bestEvKpi">--</strong></div>
+            <div><span>Entry Gate</span><strong id="entryGateKpi">--</strong></div>
+            <div><span>Suggested Size</span><strong id="suggestedSizeKpi">--</strong></div>
+            <div><span>Slippage Guard</span><strong id="slippageGuardKpi">--</strong></div>
+            <div><span>Market Regime</span><strong id="marketRegimeKpi">--</strong></div>
+            <div><span>Edge Reason</span><strong id="edgeReasonKpi">--</strong></div>
+          </div>
+        </section>
+
+        <section class="panel candidates-panel">
+          <div class="panel-header">
+            <h2>Launch Candidates</h2>
+            <span id="candidateCount">0 tokens</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Age</th>
+                  <th>Score</th>
+                  <th>Moon</th>
+                  <th>Price</th>
+                  <th>5m</th>
+                  <th>Vol 5m</th>
+                  <th>Liq</th>
+                  <th>Buys/Sells</th>
+                  <th>Flow</th>
+                  <th>Risk</th>
+                </tr>
+              </thead>
+              <tbody id="candidateRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel positions-panel">
+          <div class="panel-header">
+            <h2>Open Positions</h2>
+            <span id="positionCount">0 open</span>
+          </div>
+          <div id="positionsList" class="position-list"></div>
+        </section>
+
+        <section class="panel terminal-panel bottom-flow">
+          <div class="panel-header">
+            <h2>In-Position Order Flow</h2>
+            <span>DexScreener snapshot delta</span>
+          </div>
+          <div id="orderFlowList" class="order-flow-list"></div>
+        </section>
+
+        <section class="panel evaluator-panel">
+          <div class="panel-header">
+            <h2>Strategy Evaluator</h2>
+            <span>After every cycle</span>
+          </div>
+          <div class="kpi-grid">
+            <div><span>Trades</span><strong id="tradesKpi">0</strong></div>
+            <div><span>Win Rate</span><strong id="winRateKpi">0%</strong></div>
+            <div><span>Realized PnL</span><strong id="pnlKpi">$0.00</strong></div>
+            <div><span>Max DD</span><strong id="drawdownKpi">0%</strong></div>
+          </div>
+          <canvas id="equityChart" width="560" height="170" aria-label="Equity curve"></canvas>
+        </section>
+
+        <section class="panel moonshot-panel">
+          <div class="panel-header">
+            <h2>Moonshot Research</h2>
+            <span>10,000 live samples target</span>
+          </div>
+          <div class="moonshot-grid">
+            <div><span>Samples</span><strong id="moonshotSamples">0 / 10,000</strong></div>
+            <div><span>15m Labels</span><strong id="moonshotComplete">0 labeled</strong></div>
+            <div><span>Learning</span><strong id="moonshotLearning">0 live</strong></div>
+            <div><span>700x+</span><strong id="moonshot700x">0 hits</strong></div>
+            <div><span>Internal Dataset</span><strong id="datasetInternal">--</strong></div>
+            <div><span>External Dataset</span><strong id="datasetExternal">--</strong></div>
+            <div><span>Research Agent</span><strong id="researchAgentCycle">--</strong></div>
+            <div><span>Sheet DB</span><strong id="sheetDbRows">--</strong></div>
+          </div>
+          <div class="sheet-links">
+            <a href="/api/sheets?sheet=cycles" target="_blank" rel="noreferrer">Research Cycles CSV</a>
+            <a href="/api/sheets?sheet=observations" target="_blank" rel="noreferrer">Token Observations CSV</a>
+            <a href="/api/sheets?sheet=edges" target="_blank" rel="noreferrer">Edge Summary CSV</a>
+          </div>
+          <div class="moonshot-progress"><span id="moonshotProgress"></span></div>
+          <div class="edge-lab">
+            <div class="edge-head">
+              <span>Statistical Edge Lab</span>
+              <strong id="edgeStatus">COLLECTING</strong>
+            </div>
+            <div class="edge-kpis">
+              <div><span>Current Edge</span><strong id="edgeCurrent">--</strong></div>
+              <div><span>700x Lift</span><strong id="edgeLift700">--</strong></div>
+              <div><span>100x Hit</span><strong id="edgeHit100">--</strong></div>
+              <div><span>Confidence</span><strong id="edgeConfidence">--</strong></div>
+            </div>
+          </div>
+          <div class="table-wrap moonshot-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Edge Cohort</th>
+                  <th>Samples</th>
+                  <th>700x Lift</th>
+                  <th>100x Hit</th>
+                  <th>P90 Max</th>
+                  <th>Conf</th>
+                </tr>
+              </thead>
+              <tbody id="moonshotTopRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel intelligence-panel">
+          <div class="panel-header">
+            <h2>Edge Intelligence</h2>
+            <span id="edgeIntelStatus">Learning loop</span>
+          </div>
+          <div class="intel-grid">
+            <div><span>Readiness</span><strong id="edgeReadiness">--</strong></div>
+            <div><span>Missed Winners</span><strong id="missedWinnerCount">--</strong></div>
+            <div><span>Bad Entries</span><strong id="badEntryCount">--</strong></div>
+            <div><span>Action</span><strong id="edgeIntelAction">--</strong></div>
+          </div>
+          <div class="intel-columns">
+            <div>
+              <h3>Missed Winners</h3>
+              <div id="missedWinnerList" class="intel-list"></div>
+            </div>
+            <div>
+              <h3>Bad Entry Avoidance</h3>
+              <div id="badEntryList" class="intel-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel journal-panel">
+          <div class="panel-header">
+            <h2>Trade Journal</h2>
+            <span id="journalCount">0 closed trades</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Token</th>
+                  <th>Side</th>
+                  <th>Size</th>
+                  <th>Entry</th>
+                  <th>Exit</th>
+                  <th>PnL</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody id="journalRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="section-label infra-section">Infrastructure & Diagnostics</div>
+
+        <section class="panel data-flow-panel">
+          <div class="panel-header">
+            <h2>Agent Data Flow</h2>
+            <span id="dataFlowStatus">Live pipeline</span>
+          </div>
+          <div class="flow-map" aria-label="Schema flusso dati tra agenti">
+            <div class="flow-node">
+              <span class="flow-step">01</span>
+              <strong>DexScreener Intake</strong>
+              <p>Profiles, boosts, token pairs, 1s focused order scan</p>
+              <em id="flowDexStatus">WAIT</em>
+            </div>
+            <div class="flow-connector">→</div>
+            <div class="flow-node">
+              <span class="flow-step">02</span>
+              <strong>Scout + Filter</strong>
+              <p>Age, liquidity, broken price checks, fresh launch filter</p>
+              <em id="flowScoutStatus">WAIT</em>
+            </div>
+            <div class="flow-connector">→</div>
+            <div class="flow-node">
+              <span class="flow-step">03</span>
+              <strong>Momentum Engine</strong>
+              <p>Buy/sell pressure, 5m volume, impulse, moonshot score</p>
+              <em id="flowMomentumStatus">WAIT</em>
+            </div>
+            <div class="flow-connector">→</div>
+            <div class="flow-node">
+              <span class="flow-step">04</span>
+              <strong>Research Agent</strong>
+              <p>30m rotating batches, 10,000 sample target, cohort labels</p>
+              <em id="flowResearchStatus">ARMED</em>
+            </div>
+            <div class="flow-connector">→</div>
+            <div class="flow-node">
+              <span class="flow-step">05</span>
+              <strong>Upstash Redis</strong>
+              <p>Shared paper state, research dataset, persistent sheet source</p>
+              <em id="flowStorageStatus">WAIT</em>
+            </div>
+            <div class="flow-connector">→</div>
+            <div class="flow-node">
+              <span class="flow-step">06</span>
+              <strong>Dashboard + Trading</strong>
+              <p>Signal Radar, edge lab, entries, exits, equity, journal</p>
+              <em id="flowTradingStatus">WAIT</em>
+            </div>
+          </div>
+          <div class="flow-metrics">
+            <div><span>Live Candidates</span><strong id="flowLivePairs">0</strong></div>
+            <div><span>Research Samples</span><strong id="flowSamples">0</strong></div>
+            <div><span>Sheet Rows</span><strong id="flowSheetRows">0</strong></div>
+            <div><span>Open Positions</span><strong id="flowOpenPositions">0</strong></div>
+          </div>
+        </section>
+
+        <section class="panel data-health infra-panel">
+          <div class="panel-header">
+            <h2>DexScreener Data</h2>
+            <span>Real API only</span>
+          </div>
+          <div class="source-list" id="sourceList"></div>
+        </section>
+
+        <section class="panel bottom-agents">
+          <div class="panel-header">
+            <h2>Agent Stack</h2>
+            <span>Live watchdog</span>
+          </div>
+          <div class="agent-list" id="agentList"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="emptyTemplate">
+      <div class="empty-state">No real DexScreener data available yet. Run a refresh cycle.</div>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
