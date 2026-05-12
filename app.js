@@ -25,9 +25,9 @@ const DEFAULT_STRATEGY_CONFIG = {
   minImpulse: 10,
   maxImpulse: 180,
   moonshotBypassScore: 82,
-  evGate: 4,
-  maxSizePct: 0.10,
-  normalSizePct: 0.05,
+  evGate: 8,
+  maxSizePct: 0.05,
+  normalSizePct: 0.03,
   rationale: "Default strict gate while the system collects labeled outcomes."
 };
 
@@ -870,7 +870,7 @@ function profitabilityProfile(candidate) {
     - agePenalty;
   const winProbability = Math.max(0.20, Math.min(0.82, baseProbability));
   const avgWinPct = Math.min(115, 26 + candidate.moonshotScore * 0.48 + Math.min(22, volLiq * 6) + (edge.ok ? 22 : 0));
-  const avgLossPct = 16 + slippagePct * 1.4 + (candidate.risk === "MED" ? 8 : 0) + (candidate.risk === "HIGH" ? 18 : 0);
+  const avgLossPct = 8 + slippagePct * 1.2 + (candidate.risk === "MED" ? 3 : 0) + (candidate.risk === "HIGH" ? 8 : 0);
   const expectancyPct = winProbability * avgWinPct - (1 - winProbability) * avgLossPct - slippagePct * 2;
   const adaptiveMoonshot = candidate.moonshotScore >= safeNum(cfg.moonshotBypassScore)
     && candidate.liq >= safeNum(cfg.minLiquidity) * 0.75
@@ -902,9 +902,10 @@ function profitabilityProfile(candidate) {
 
 function runPaperCycle() {
   updateOpenPositions();
+  if (appState.cash < appState.startingCapital * 0.30) return;
   const openAddresses = new Set(appState.positions.map((p) => p.pairAddress));
   for (const candidate of latestCandidates) {
-    if (appState.positions.length >= 3) break;
+    if (appState.positions.length >= 2) break;
     if (openAddresses.has(candidate.pair.pairAddress)) continue;
     const edge = edgeCandidate(candidate);
     const profile = profitabilityProfile(candidate);
@@ -964,8 +965,8 @@ function updateOpenPositions() {
     const flowBreak = (buyRatio < 1.15 || current.change5 <= -18 || snapshotMove <= -8) && txCount >= 40;
     let exitReason = "";
 
-    if (!position.partialTaken && flowBreak && pnlPct <= -9) exitReason = "flow break stop -9%";
-    if (!exitReason && pnlPct <= -14) exitReason = "professional hard stop -14%";
+    if (!position.partialTaken && flowBreak && pnlPct <= -5) exitReason = "flow break stop -5%";
+    if (!exitReason && pnlPct <= -8) exitReason = "professional hard stop -8%";
     if (!exitReason && pnlPct >= 35 && !position.partialTaken) {
       const halfUnits = position.units * 0.5;
       const proceeds = halfUnits * current.price * 0.99;
@@ -976,7 +977,7 @@ function updateOpenPositions() {
     }
     if (!exitReason && pnlPct >= 45 && dropFromHigh <= -18) exitReason = "EV trailing stop after pump";
     if (!exitReason && sellPressure) exitReason = "sell pressure dominates";
-    if (!exitReason && Date.now() - position.entryTime > 12 * 60000 && pnlPct < 8) exitReason = "momentum timeout";
+    if (!exitReason && Date.now() - position.entryTime > 8 * 60000 && pnlPct < 8) exitReason = "momentum timeout";
 
     if (exitReason) {
       const proceeds = position.units * current.price * 0.99;
